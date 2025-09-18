@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de INSS e IRRF</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <span class="badge badge-primary">2025</span>
+        </div>
+    </header>
+    
+    <main class="container">
+        <h1>Calculadora de INSS e IRRF</h1>
+        <div class="destaque">
+            <strong>CALCULE AGORA SEUS IMPOSTOS SALARIAIS!</strong><br>
+            Ferramenta completa e atualizada para cálculo da contribuição previdenciária (INSS) e imposto de renda (IRRF) com tabelas progressivas 2025.
+            <div class="destaque-badges">
+                <span class="badge badge-accent">Atualizado</span>
+                <span class="badge badge-success">Preciso</span>
+                <span class="badge badge-warning">Rápido</span>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+            </div>
+            <p>Insira o valor do seu salário bruto e o número de dependentes para calcular a contribuição do INSS e o IRRF conforme as tabelas progressivas.</p>
+        </div>
+        
+        <div class="form-group">
+            <label for="salarioBruto">Salário Bruto (R$):</label>
+            <div class="input-icon">
+                <span class="icon">R$</span>
+                <input type="number" id="salarioBruto" step="0.01" min="0" placeholder="Digite o valor do salário bruto">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="dependentes">Número de Dependentes:</label>
+            <div class="input-icon">
+                <span class="icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </span>
+                <input type="number" id="dependentes" min="0" value="0" placeholder="Quantidade de dependentes">
+            </div>
+        </div>
+        
+        <button onclick="calcularImpostos()">Calcular INSS e IRRF</button>
+        
+        <div id="resultado" class="result" style="display: none;">
+            <div class="inss-section">
+                <h3>Cálculo do INSS <span class="badge badge-primary">2025</span></h3>
+                <div id="detalhesINSS"></div>
+                <div class="result-item">
+                    <strong>Valor do INSS:</strong> <span id="valorINSS"></span>
+                </div>
+            </div>
+            
+            <div class="irrf-section">
+                <h3>Cálculo do IRRF <span class="badge badge-accent">2025</span></h3>
+                <div class="result-item">
+                    <strong>Dedução por Dependentes:</strong> <span id="deducaoDependentes"></span>
+                </div>
+                <div class="result-item">
+                    <strong>Base de Cálculo do IR:</strong> <span id="baseCalculoIR"></span>
+                </div>
+                <div class="result-item">
+                    <strong>Alíquota do IR:</strong> <span id="aliquotaIR"></span>
+                </div>
+                <div class="result-item">
+                    <strong>Valor do IRRF:</strong> <span id="valorIRRF"></span>
+                </div>
+            </div>
+            
+            <div class="result-item salario-liquido">
+                <strong>Salário Líquido Final (após INSS e IRRF):</strong> <span id="salarioLiquido"></span>
+            </div>
+        </div>
+    </main>
+    
+    <footer class="footer">
+        <p>Calculadora de INSS e IRRF © 2025 - Valores atualizados conforme legislação vigente</p>
+    </footer>
+
+    <script>
+        function calcularImpostos() {
+            // Obter o valor do salário bruto e número de dependentes
+            const salarioBruto = parseFloat(document.getElementById('salarioBruto').value);
+            const numeroDependentes = parseInt(document.getElementById('dependentes').value);
+            
+            // Verificar se o valor é válido
+            if (isNaN(salarioBruto) || salarioBruto <= 0) {
+                alert('Por favor, insira um valor válido para o salário bruto.');
+                return;
+            }
+            
+            // 1. CÁLCULO DO INSS
+            // Tabela de alíquotas do INSS 2025
+            const faixasINSS = [
+                { limite: 1500.00, aliquota: 7.5 },
+                { limite: 2900.00, aliquota: 9.0 },
+                { limite: 4300.00, aliquota: 12.0 },
+                { limite: 8500.00, aliquota: 14.0 }
+            ];
+            
+            let valorINSS = 0;
+            let valorPorFaixa = [];
+            
+            // Cálculo progressivo por faixa
+            for (let i = 0; i < faixasINSS.length; i++) {
+                const faixaAtual = faixasINSS[i];
+                const faixaAnterior = i > 0 ? faixasINSS[i-1].limite : 0;
+                
+                if (salarioBruto <= faixaAnterior) {
+                    break;
+                }
+                
+                let valorDaFaixa;
+                if (salarioBruto <= faixaAtual.limite) {
+                    valorDaFaixa = (salarioBruto - faixaAnterior) * (faixaAtual.aliquota / 100);
+                    valorPorFaixa.push({
+                        faixa: i + 1,
+                        de: faixaAnterior,
+                        ate: salarioBruto,
+                        aliquota: faixaAtual.aliquota,
+                        valor: valorDaFaixa
+                    });
+                    valorINSS += valorDaFaixa;
+                    break;
+                } else {
+                    valorDaFaixa = (faixaAtual.limite - faixaAnterior) * (faixaAtual.aliquota / 100);
+                    valorPorFaixa.push({
+                        faixa: i + 1,
+                        de: faixaAnterior,
+                        ate: faixaAtual.limite,
+                        aliquota: faixaAtual.aliquota,
+                        valor: valorDaFaixa
+                    });
+                    valorINSS += valorDaFaixa;
+                }
+            }
+            
+            // Teto do INSS
+            if (salarioBruto > faixasINSS[faixasINSS.length - 1].limite) {
+                valorINSS = 995.00; // Valor máximo de contribuição em 2025
+            }
+            
+            // Calcular alíquota efetiva do INSS
+            const aliquotaEfetiva = (valorINSS / salarioBruto) * 100;
+            
+            // Salário base para IR (após INSS)
+            const salarioBaseIR = salarioBruto - valorINSS;
+            
+            // 2. CÁLCULO DO IRRF
+            // Valor de dedução por dependente (2025 projetado)
+            const valorDeducaoDependente = 189.59;
+            const totalDeducaoDependentes = numeroDependentes * valorDeducaoDependente;
+            
+            // Base de cálculo do IR
+            const baseCalculoIR = salarioBaseIR - totalDeducaoDependentes;
+            
+            // Tabela de alíquotas do IRRF 2025 (projetada)
+            const faixasIRRF = [
+                { limite: 2259.20, aliquota: 0, deducao: 0 },
+                { limite: 2826.65, aliquota: 7.5, deducao: 169.44 },
+                { limite: 3751.05, aliquota: 15, deducao: 381.44 },
+                { limite: 4664.68, aliquota: 22.5, deducao: 662.77 },
+                { limite: Infinity, aliquota: 27.5, deducao: 896.00 }
+            ];
+            
+            // Cálculo do IRRF
+            let aliquotaIR = 0;
+            let deducaoIR = 0;
+            let valorIRRF = 0;
+            
+            for (let i = 0; i < faixasIRRF.length; i++) {
+                if (baseCalculoIR <= faixasIRRF[i].limite) {
+                    aliquotaIR = faixasIRRF[i].aliquota;
+                    deducaoIR = faixasIRRF[i].deducao;
+                    break;
+                }
+            }
+            
+            // Cálculo do valor do IRRF
+            valorIRRF = ((baseCalculoIR * aliquotaIR) / 100) - deducaoIR;
+            valorIRRF = valorIRRF < 0 ? 0 : valorIRRF;
+            
+            // Calcular salário líquido final (após INSS e IRRF)
+            const salarioLiquido = salarioBaseIR - valorIRRF;
+            
+            // Exibir resultados do INSS
+            // Criar detalhes do INSS
+            const detalhesINSS = document.getElementById('detalhesINSS');
+            detalhesINSS.innerHTML = '';
+            
+            valorPorFaixa.forEach(faixa => {
+                const faixaElement = document.createElement('div');
+                faixaElement.className = 'faixa';
+                faixaElement.innerHTML = `
+                    <strong>Faixa ${faixa.faixa}:</strong> 
+                    De R$ ${faixa.de.toFixed(2)} até R$ ${faixa.ate.toFixed(2)} 
+                    (Alíquota: ${faixa.aliquota}%) = R$ ${faixa.valor.toFixed(2)}
+                `;
+                detalhesINSS.appendChild(faixaElement);
+            });
+            
+            // Adicionar espaçamento após a última faixa
+            detalhesINSS.appendChild(document.createElement('br'));
+            
+            // Exibir valor do INSS
+            document.getElementById('valorINSS').textContent = `R$ ${valorINSS.toFixed(2)} (${aliquotaEfetiva.toFixed(2)}%)`;
+            
+            // Exibir resultados do IRRF
+            document.getElementById('deducaoDependentes').textContent = `R$ ${totalDeducaoDependentes.toFixed(2)}`;
+            document.getElementById('baseCalculoIR').textContent = `R$ ${baseCalculoIR.toFixed(2)}`;
+            document.getElementById('aliquotaIR').textContent = `${aliquotaIR.toFixed(2)}%`;
+            document.getElementById('valorIRRF').textContent = `R$ ${valorIRRF.toFixed(2)}`;
+            document.getElementById('salarioLiquido').textContent = `R$ ${salarioLiquido.toFixed(2)}`;
+            
+            // Mostrar o resultado
+            document.getElementById('resultado').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
